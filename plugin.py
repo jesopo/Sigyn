@@ -422,17 +422,10 @@ class Sigyn(callbacks.Plugin,plugins.ChannelDBHandler):
                     found = True
                     try:
                         r = requests.post(droneblHost,data=data,headers=headers)
-                        response = r.text.replace('\n','')
-                        if "You are not authorized to remove this incident" in response:
-                            self.logChannel(irc,'RMDNSBL: %s (%s) failed: You are not authorized to remove this incident' % (ip,id))
-                            if ip in self.rmrequestors:
-                                irc.queueMsg(ircmsgs.privmsg(self.rmrequestors[ip],'%s (%s) not removed: You are not authorized to remove this incident' % (ip,id)))
-                                del self.rmrequestors[ip]
-                        else:
-                            self.logChannel(irc,'RMDNSBL: %s (%s) removed' % (ip,id))
-                            if ip in self.rmrequestors:
-                                irc.queueMsg(ircmsgs.privmsg(self.rmrequestors[ip],'%s (%s) removed' % (ip,id)))
-                                del self.rmrequestors[ip]
+                        self.logChannel(irc,'RMDNSBL: %s (%s) removed' % (ip,id))
+                        if ip in self.rmrequestors:
+                            irc.queueMsg(ircmsgs.privmsg(self.rmrequestors[ip],'%s (%s) removed' % (ip,id)))
+                            del self.rmrequestors[ip]
                     except:
                         self.logChannel(irc,'RMDNSBL: %s (%s) failed: unknown error' % (ip,id))
                         if ip in self.rmrequestors:
@@ -443,7 +436,9 @@ class Sigyn(callbacks.Plugin,plugins.ChannelDBHandler):
                 if ip in self.rmrequestors:
                     irc.queueMsg(ircmsgs.privmsg(self.rmrequestors[ip],'%s (%s) not removed: no listing found' % (ip,id)))
                     del self.rmrequestors[ip]
-        data = "<?xml version=\"1.0\"?><request key='"+droneblKey+"'><lookup ip='"+ip+"' /></request>"
+        data = '<?xml version="1.0"?><request key="%s"><lookup ip="%s" own="1" /></request>' % (
+            droneblKey, ip
+        )
         r = requests.post(droneblHost,data=data,headers=headers)
         if r.status_code == 200:
             check(r.text)
